@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// <-- 1. A dedicated class for your history data (better than a Map)
+class _HistoryItem {
+  final String surah;
+  final String day;
+  final int accuracy; // e.g., 80
+  final String status;   // e.g., "Itqan Jayyid"
+
+  _HistoryItem({
+    required this.surah,
+    required this.day,
+    required this.accuracy,
+    required this.status,
+  });
+}
+
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
@@ -9,13 +24,91 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  // Sample data - replace with your actual data source
-  final List<Map<String, String>> historyItems = [
-    {'surah': 'Al-Ikhlas', 'day': 'Today'},
-    {'surah': 'An-Nas', 'day': 'sunday'},
-    {'surah': 'Al-Falaq', 'day': 'sunday'},
-    {'surah': 'Al-Ikhlas', 'day': 'sunday'},
+  // <-- 2. Updated sample data using the new class
+  final List<_HistoryItem> historyItems = [
+    _HistoryItem(
+        surah: 'Al-Ikhlas', day: 'Today', accuracy: 95, status: 'Itqan Mumtaz'),
+    _HistoryItem(
+        surah: 'An-Nas', day: 'Sunday', accuracy: 80, status: 'Itqan Jayyid'),
+    _HistoryItem(
+        surah: 'Al-Falaq', day: 'Sunday', accuracy: 75, status: 'Itqan Hasan'),
+    _HistoryItem(
+        surah: 'Al-Ikhlas', day: 'Sunday', accuracy: 60, status: 'Da\'if (Weak)'),
   ];
+
+  // <-- 3. The new function to show your accuracy dialog
+  void _showAccuracyDialog(_HistoryItem item) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          // Title can be the Surah name
+          title: Text(
+            item.surah,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          // Content is the percentage and status
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Important!
+            children: [
+              Text(
+                '${item.accuracy}%',
+                style: GoogleFonts.poppins(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  // Bonus: Change color based on score
+                  color: _getAccuracyColor(item.accuracy),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.status,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+          // The "okay button"
+          actions: [
+            TextButton(
+              child: Text(
+                'Okay',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(); // Closes the dialog
+              },
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
+        );
+      },
+    );
+  }
+
+  // Helper function to change color based on score
+  Color _getAccuracyColor(int accuracy) {
+    if (accuracy >= 90) {
+      return const Color.fromARGB(255, 74, 224, 96); // Green
+    }
+    if (accuracy >= 75) {
+      return Colors.blue; // Blue
+    }
+    if (accuracy >= 50) {
+      return Colors.orange; // Orange
+    }
+    return Colors.red; // Red
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +132,10 @@ class _HistoryPageState extends State<HistoryPage> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF4FC3F7), Color(0xFF29B6F6)],
+                    colors: [
+                      Color.fromARGB(255, 62, 163, 199),
+                      Color(0xFF196580)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -52,24 +148,25 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Surah memorized',
                       style: GoogleFonts.poppins(
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: const Color.fromARGB(255, 255, 255, 255),
                       ),
                     ),
                     Text(
                       '3/114',
                       style: GoogleFonts.poppins(
-                        fontSize: 22,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: const Color.fromARGB(255, 255, 255, 255),
+                        color: const Color.fromARGB(255, 74, 224, 96),
                       ),
                     ),
                   ],
@@ -114,9 +211,10 @@ class _HistoryPageState extends State<HistoryPage> {
                   itemBuilder: (context, index) {
                     final item = historyItems[index];
                     return InkWell(
+                      // <-- 4. This is the updated onTap
                       onTap: () {
-                        // Handle item tap
-                        print('Tapped on ${item['surah']}');
+                        // Call the new function and pass the item
+                        _showAccuracyDialog(item);
                       },
                       borderRadius: BorderRadius.circular(10),
                       child: Padding(
@@ -128,16 +226,18 @@ class _HistoryPageState extends State<HistoryPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    item['surah']!,
+                                    // Use item.surah (cleaner)
+                                    item.surah,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.black,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    item['day']!,
+                                    // Use item.day
+                                    item.day,
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: const Color(0xFF999999),

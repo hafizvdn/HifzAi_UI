@@ -42,6 +42,10 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   // For Memorize Mode: Keeps track of which verses are hidden
   Map<int, bool> _verseVisibility = {};
 
+  // 🔹 ADD THIS 🔹
+  // Tracks visibility for the single Mushaf block in the Memorize tab
+  bool _isMushafVisible = true;
+
   @override
   void initState() {
     super.initState();
@@ -268,23 +272,37 @@ class _SurahDetailPageState extends State<SurahDetailPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Card Header with Verse Number ONLY
+          // Card Header with Verse Number and Speaker Icon
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF196580).withOpacity(0.05), // Corrected: Use withOpacity
+              color: const Color(0xFF196580).withOpacity(0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
               ),
             ),
-            child: Text(
-              '${widget.surahName}: $verseNum',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF196580),
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.volume_up, color: Colors.black),
+                  onPressed: () {
+                    // TODO: Add audio play logic
+                    print('Play verse $verseNum');
+                  },
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                Text(
+                  '${widget.surahName}: $verseNum',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF196580),
+                  ),
+                ),
+              ],
             ),
           ),
           // Verse Content
@@ -328,32 +346,37 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   //TODO --- (Memorize Mode Widgets - UNCHANGED) ------------------------------------------------------------
 
   /// 🔹 Memorize Mode - Verse by Verse with Hifz Tools
+/// 🔹 Memorize Mode - 🔹 MODIFIED to show a single interactive Mushaf card
   Widget _buildMemorizeMode() {
-   // ... (no changes needed here) ...
     return CustomScrollView(
       slivers: [
-        _buildBismillah(), // This widget is now used by both tabs
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final verse = verses[index];
-              final int verseNum = verse['numberInSurah'];
-              final bool isVerseVisible = _verseVisibility[verseNum] ?? true;
-
-              return _buildVerseCard(verse, verseNum, isVerseVisible);
-            },
-            childCount: verses.length,
-          ),
-        ),
+        _buildBismillah(), // Re-uses the Bismillah
+        
+        // 🔹 This new widget holds the single card with its tools
+        SliverToBoxAdapter(child: _buildMemorizeCard()), 
+        
         const SliverToBoxAdapter(child: SizedBox(height: 80)),
       ],
     );
   }
 
   /// 🔹 Dedicated widget for the verse card in Memorize Mode
-  Widget _buildVerseCard(
-      Map<String, dynamic> verse, int verseNum, bool isVerseVisible) {
-    // ... (no changes needed here) ...
+  /// 🔹 MODIFIED: To use Mushaf-style text and microphone button
+/// 🔹 NEW: A single card for the "Memorize" tab
+  /// This card contains Hifz tools and the full, toggleable Mushaf text.
+  Widget _buildMemorizeCard() {
+    if (verses.isEmpty) {
+      return const Center(child: Text('No verses available'));
+    }
+
+    // Logic to build the full text (from your _buildMushafView)
+    String fullSurahText = verses.map((verse) {
+      String verseText = verse['text'];
+      int verseNumber = verse['numberInSurah'];
+      return '$verseText ۝$verseNumber';
+    }).join(' ');
+
+    // This is the main card structure
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -370,7 +393,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Card Header with Verse Number and Hifz Tools
+          // --- 1. HEADER WITH HIFZ TOOLS ---
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -384,7 +407,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${widget.surahName}: $verseNum',
+                  widget.surahName, // Display Surah name
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -393,85 +416,54 @@ class _SurahDetailPageState extends State<SurahDetailPage>
                 ),
                 Row(
                   children: [
-                    _buildHifzButton(Icons.play_arrow, () {
-                      // TODO: Add audio play logic
-                      print('Play verse $verseNum');
-                    }),
-                    _buildHifzButton(Icons.repeat, () {
-                      // TODO: Add loop logic (e.g., show menu 3x, 5x, 7x)
-                      print('Loop verse $verseNum');
-                    }),
+                    // Text("Tasmik Mode", style: GoogleFonts.poppins(
+                    //   fontSize: 12,
+                    //   fontWeight: FontWeight.w500,
+                    //   color: const Color(0xFF196580),
+                    // ),),
+                    // _buildHifzButton(Icons.play_arrow, () {
+                    //   // TODO: Add logic to play the *entire* surah
+                    //   print('Play entire surah');
+                    // }),
+                    // _buildHifzButton(Icons.repeat, () {
+                    //   // TODO: Add logic to loop the *entire* surah
+                    //   print('Loop entire surah');
+                    // }),
+                    // 🔹 THE ONE MICROPHONE BUTTON 🔹
                     _buildHifzButton(
-                      isVerseVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                      _isMushafVisible
+                          ? Icons.mic_outlined
+                          : Icons.mic_off_outlined,
                       () {
+                        // Toggles the state variable for the whole card
                         setState(() {
-                          _verseVisibility[verseNum] = !isVerseVisible;
+                          _isMushafVisible = !_isMushafVisible;
                         });
                       },
                     ),
-                    _buildHifzButton(Icons.bookmark_border, () {
-                      // TODO: Add bookmark logic
-                      print('Bookmark verse $verseNum');
-                    }),
+                    // _buildHifzButton(Icons.bookmark_border, () {
+                    //   // TODO: Add logic to bookmark the *entire* surah
+                    //   print('Bookmark surah');
+                    // }),
                   ],
                 ),
               ],
             ),
           ),
 
-          // Verse Content
+          // --- 2. CONDITIONAL BODY (Text or Placeholder) ---
           Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Arabic text (conditionally visible)
-                if (isVerseVisible)
-                  Text(
-                    verse['text'],
-                    style: GoogleFonts.amiri(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                      height: 2.0,
-                    ),
-                    textAlign: TextAlign.right,
-                    textDirection: TextDirection.rtl,
-                  )
-                else
-                  // Placeholder for hidden verse
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 24.0),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: Icon(
-                      Icons.visibility_off_outlined,
-                      color: Colors.grey[400],
-                      size: 32,
-                    ),
-                  ),
-
-                const SizedBox(height: 16),
-                Divider(color: Colors.grey[300]),
-                const SizedBox(height: 12),
-
-                // Translation
-                Text(
-                  // TODO: Get real translation from your JSON
-                  'Translation for verse ${verse['numberInSurah']} will be displayed here. The user reads this, recites, then checks.',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.6,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.all(24.0), // Padding from Mushaf view
+            child: AnimatedCrossFade(
+              duration: const Duration(milliseconds: 300),
+              // The visible Mushaf text
+              firstChild: _buildMushafTextWidget(fullSurahText),
+              // The "hidden" placeholder
+              secondChild: _buildHiddenPlaceholder(),
+              // This bool controls which child is visible
+              crossFadeState: _isMushafVisible
+                  ? CrossFadeState.showFirst
+                  : CrossFadeState.showSecond,
             ),
           ),
         ],
@@ -479,6 +471,93 @@ class _SurahDetailPageState extends State<SurahDetailPage>
     );
   }
 
+  /// 🔹 NEW: Helper widget for the visible Mushaf text
+  Widget _buildMushafTextWidget(String fullSurahText) {
+    // This styling is copied directly from your _buildMushafView
+    return Text(
+      fullSurahText,
+      style: GoogleFonts.amiri(
+        fontSize: 22,
+        fontWeight: FontWeight.w500,
+        color: Colors.black87,
+        height: 2.5,
+        letterSpacing: 0.5,
+      ),
+      textAlign: TextAlign.justify,
+      textDirection: TextDirection.rtl,
+    );
+  }
+
+  /// 🔹 NEW: Helper widget for the "hidden" placeholder
+  /// 🔹 MODIFIED: To show the "Tasmik in progress" UI based on your image
+  Widget _buildHiddenPlaceholder() {
+    // This is the placeholder styling based on your image
+    return Center(
+      child: InkWell(
+        // 🔹 This makes the whole area tappable to stop the "tasmik" 🔹
+        onTap: () {
+          setState(() {
+            _isMushafVisible = true; // Set it back to visible
+          });
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          // Use the same padding as before to give it space
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.mic, // 1. Microphone Icon
+                color: Colors.black,
+                size: 80,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tasmik in progress ......', // 2. Text
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF196580), // App's primary color
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // 3. Recording Button (built with a Stack to match your image)
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.circle_outlined, // The outer black ring
+                    color: Colors.black,
+                    size: 60,
+                  ),
+                  Icon(
+                    Icons.circle, // The inner red dot
+                    color: Colors.red[600],
+                    size: 25,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Click to stop', // 4. "Click to stop" text
+                style: GoogleFonts.poppins(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  /// 🔹 Helper widget for microphone button in Mushaf view
+    /// 🔹 Helper widget for microphone button in Memorize mode
+  /// 🔹 MODIFIED: To match Hifz button layout and toggle icon
+  
   /// 🔹 Helper widget for the Hifz buttons
   Widget _buildHifzButton(IconData icon, VoidCallback onPressed) {
    // ... (no changes needed here) ...
@@ -498,7 +577,7 @@ class _SurahDetailPageState extends State<SurahDetailPage>
   @override
   Widget build(BuildContext context) {
     // ... (no changes needed here) ...
-     return Scaffold(
+    return Scaffold(
       backgroundColor: const Color.fromRGBO(243, 243, 243, 1),
       body: isLoading
           ? Center(

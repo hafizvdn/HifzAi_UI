@@ -257,7 +257,7 @@ class _GameLevelState extends State<GameLevel> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isCorrect ? const Color.fromARGB(255, 51, 204, 255) : const Color.fromARGB(255, 255, 68, 96),
+        backgroundColor: isCorrect ? const Color.fromARGB(255, 46, 230, 111) : const Color.fromARGB(255, 233, 92, 92),
         title: Text(isCorrect ? "Correct!" : "Try Again" , style: const TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 255, 255, 255))),
         
         content: Text(isCorrect ? "Masha'Allah! Well done." : "That's not quite right. Try again." ,style: const TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255, 255, 255, 255))),
@@ -443,7 +443,7 @@ class _GameLevelState extends State<GameLevel> {
           margin: const EdgeInsets.symmetric(horizontal: 24),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFF4A90E2).withOpacity(0.7),
+            color: const Color(0xFF2C5F7C).withOpacity(1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Wrap(

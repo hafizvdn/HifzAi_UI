@@ -174,7 +174,7 @@ class _GamePageState extends State<GamePage> {
             levelIndex: i,
             // Logic from reference: First level is always unlocked
             isUnlocked: i == 0,
-            isCompleted: false, // You can update this logic
+            isCompleted: false, // todo You can update this logic
           ));
         }
       }

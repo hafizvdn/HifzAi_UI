@@ -24,7 +24,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     super.initState();
     // Start a timer to call onComplete after a delay, e.g., 3 seconds
     // Adjust duration as needed
-    _timer = Timer(const Duration(seconds: 31), () {
+    _timer = Timer(const Duration(seconds: 3), () {
       widget.onComplete();
     });
   }
@@ -50,8 +50,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
               const SizedBox(height: 50), // Space from the top
               // Image in the top section
               Image.asset(
-                'assets/image/udin.jpeg', // Path to your image
-                height: 200, // Adjust height as needed
+                'assets/image/girl_love.png', // Path to your image
+                height: 400, // Adjust height as needed
                 // You might need to adjust width or BoxFit depending on the image aspect ratio
                 // For a character, BoxFit.contain is often good.
                 fit: BoxFit.contain,
@@ -72,7 +72,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    "“Did you know?”",
+                    "Did you know?",
                     style: GoogleFonts.poppins(
                       color: Colors.white,
                       fontSize: 20,
