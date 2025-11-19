@@ -27,6 +27,7 @@ class DailyGoal {
   double get progress => currentValue / targetValue;
 }
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
